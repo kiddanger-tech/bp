@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BP Investment</title>
+  <meta name="description" content="BP Investment mobile app landing page with login, register and dashboard access.">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", Arial, sans-serif;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: radial-gradient(circle at top left, #0f172a, #020617 60%, #000000);
+      color: white;
+    }
+
+    body {
+      position: relative;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    /* LOADER */
+    #loader {
+      position: fixed;
+      inset: 0;
+      background: #020617;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 99999;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+    }
+
+    #loader.hide {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .loader-logo {
+      font-size: 42px;
+      font-weight: 800;
+      color: #00f7ff;
+      text-shadow:
+        0 0 10px #00f7ff,
+        0 0 20px #00f7ff,
+        0 0 40px #00f7ff;
+      animation: pulseGlow 1.5s infinite alternate;
+      margin-bottom: 20px;
+    }
+
+    .loader-bar {
+      width: 220px;
+      height: 8px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(0,247,255,0.15);
+    }
+
+    .loader-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #00f7ff, #22c55e);
+      box-shadow: 0 0 15px #00f7ff, 0 0 25px #22c55e;
+      animation: loadingBar 3s ease forwards;
+    }
+
+    /* PARTICLES */
+    .particles {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .particle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: rgba(0,247,255,0.6);
+      border-radius: 50%;
+      box-shadow: 0 0 12px rgba(0,247,255,0.8);
+      animation: floatParticle linear infinite;
+    }
+
+    .particle:nth-child(2n) {
+      background: rgba(34,197,94,0.55);
+      box-shadow: 0 0 12px rgba(34,197,94,0.75);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      width: 300px;
+      height: 300px;
+      background: rgba(0, 255, 255, 0.12);
+      filter: blur(120px);
+      top: 50px;
+      left: -50px;
+      z-index: 0;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      width: 300px;
+      height: 300px;
+      background: rgba(34, 197, 94, 0.10);
+      filter: blur(120px);
+      bottom: 50px;
+      right: -50px;
+      z-index: 0;
+    }
+
+    /* APP SHELL */
+    .app-shell {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 5%;
+      animation: fadeDown 1s ease;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(2, 6, 23, 0.6);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(0,247,255,0.08);
+    }
+
+    .logo {
+      font-size: 30px;
+      font-weight: 800;
+      color: #00f7ff;
+      text-shadow: 
+        0 0 5px #00f7ff,
+        0 0 10px #00f7ff,
+        0 0 20px #00f7ff,
+        0 0 40px #00f7ff;
+      letter-spacing: 1px;
+      animation: pulseGlow 2s infinite alternate;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      font-size: 14px;
+      color: #cbd5e1;
+    }
+
+    .nav-links a {
+      padding: 8px 12px;
+      border-radius: 10px;
+      transition: 0.3s ease;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: #00f7ff;
+      background: rgba(0,247,255,0.08);
+      box-shadow: 0 0 10px rgba(0,247,255,0.12);
+    }
+
+    /* PAGE SYSTEM */
+    .page-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .page {
+      position: absolute;
+      inset: 0;
+      overflow-y: auto;
+      padding: 20px 0 110px;
+      opacity: 0;
+      transform: translateX(100%);
+      transition: transform 0.55s ease, opacity 0.55s ease;
+      pointer-events: none;
+    }
+
+    .page.active {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+      z-index: 5;
+    }
+
+    .page.exit-left {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+
+    .page-inner {
+      animation: fadeUp 0.7s ease;
+    }
+
+    /* HERO */
+    .hero {
+      min-height: calc(100vh - 170px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 40px;
+      flex-wrap: wrap;
+      padding: 40px 0;
+    }
+
+    .hero-text {
+      flex: 1;
+      min-width: 280px;
+      animation: fadeUp 1s ease;
+    }
+
+    .typing {
+      color: #22c55e;
+      text-shadow: 0 0 10px rgba(34,197,94,0.7);
+      font-weight: 700;
+      min-height: 28px;
+      margin-bottom: 15px;
+      font-size: 1rem;
+    }
+
+    .hero-text h1 {
+      font-size: 3rem;
+      line-height: 1.2;
+      margin-bottom: 20px;
+    }
+
+    .hero-text h1 span {
+      color: #00f7ff;
+      text-shadow:
+        0 0 10px #00f7ff,
+        0 0 20px #00f7ff,
+        0 0 40px #00f7ff;
+    }
+
+    .hero-text p {
+      font-size: 1.1rem;
+      color: #cbd5e1;
+      margin-bottom: 30px;
+      max-width: 550px;
+      line-height: 1.8;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 14px 28px;
+      border-radius: 14px;
+      font-weight: 700;
+      transition: 0.3s ease;
+      display: inline-block;
+      border: none;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .btn-primary {
+      background: #00f7ff;
+      color: #020617;
+      box-shadow:
+        0 0 10px #00f7ff,
+        0 0 20px #00f7ff,
+        0 0 40px rgba(0,247,255,0.5);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px) scale(1.03);
+    }
+
+    .btn-secondary {
+      border: 2px solid #22c55e;
+      color: #22c55e;
+      box-shadow: 0 0 15px rgba(34,197,94,0.25);
+      background: transparent;
+    }
+
+    .btn-secondary:hover {
+      background: #22c55e;
+      color: #020617;
+    }
+
+    .btn-third {
+      border: 2px solid #ffffff;
+      color: #ffffff;
+      background: transparent;
+    }
+
+    .btn-third:hover {
+      background: white;
+      color: #020617;
+    }
+
+    .hero-card {
+      flex: 1;
+      min-width: 300px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(0,247,255,0.25);
+      backdrop-filter: blur(18px);
+      border-radius: 24px;
+      padding: 30px;
+      box-shadow:
+        0 0 20px rgba(0,247,255,0.12),
+        0 0 40px rgba(34,197,94,0.08),
+        0 10px 40px rgba(0,0,0,0.35);
+      animation: fadeUp 1.2s ease;
+    }
+
+    .hero-card h3 {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      color: #00f7ff;
+      text-shadow: 0 0 10px rgba(0,247,255,0.8);
+    }
+
+    .mini-box {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: 0.3s ease;
+    }
+
+    .mini-box:hover {
+      transform: translateY(-4px);
+      border-color: #00f7ff;
+      box-shadow: 0 0 20px rgba(0,247,255,0.18);
+    }
+
+    .mini-box span {
+      color: #cbd5e1;
+      font-size: 14px;
+    }
+
+    .mini-box strong {
+      font-size: 18px;
+    }
+
+    section {
+      padding: 40px 0 80px;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 2.2rem;
+      margin-bottom: 15px;
+      color: #ffffff;
+      text-shadow: 0 0 15px rgba(0,247,255,0.2);
+    }
+
+    .section-sub {
+      text-align: center;
+      color: #cbd5e1;
+      margin-bottom: 45px;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.8;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 25px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(0,247,255,0.12);
+      border-radius: 22px;
+      padding: 28px;
+      transition: 0.35s ease;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      backdrop-filter: blur(12px);
+    }
+
+    .card:hover {
+      transform: translateY(-8px) scale(1.02);
+      border-color: #00f7ff;
+      box-shadow: 0 0 24px rgba(0,247,255,0.16);
+    }
+
+    .card h3 {
+      margin-bottom: 12px;
+      color: #00f7ff;
+      font-size: 1.3rem;
+      text-shadow: 0 0 10px rgba(0,247,255,0.5);
+    }
+
+    .card p, .card li {
+      color: #cbd5e1;
+      line-height: 1.8;
+    }
+
+    .card ul {
+      padding-left: 18px;
+      margin-top: 10px;
+    }
+
+    .mentor-name {
+      font-size: 1.2rem;
+      color: #fff;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    .mentor-role {
+      color: #22c55e;
+      margin-bottom: 14px;
+      font-size: 14px;
+    }
+
+    .mentor-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .faq-box {
+      max-width: 900px;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .faq-item {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(0,247,255,0.12);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      backdrop-filter: blur(12px);
+      transition: 0.3s ease;
+    }
+
+    .faq-item:hover {
+      border-color: #00f7ff;
+      box-shadow: 0 0 20px rgba(0,247,255,0.15);
+    }
+
+    .faq-question {
+      width: 100%;
+      background: transparent;
+      color: white;
+      border: none;
+      padding: 20px 24px;
+      text-align: left;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .faq-question span {
+      color: #00f7ff;
+      font-size: 22px;
+      transition: 0.3s ease;
+    }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease, padding 0.4s ease;
+      padding: 0 24px;
+      color: #cbd5e1;
+      line-height: 1.8;
+    }
+
+    .faq-item.active .faq-answer {
+      max-height: 250px;
+      padding: 0 24px 20px 24px;
+    }
+
+    .faq-item.active .faq-question span {
+      transform: rotate(45deg);
+    }
+
+    footer {
+      padding: 30px 0 120px;
+      text-align: center;
+      color: #94a3b8;
+      font-size: 14px;
+    }
+
+    .whatsapp-float {
+      position: fixed;
+      bottom: 95px;
+      right: 20px;
+      background: #25D366;
+      color: white;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      box-shadow:
+        0 0 15px rgba(37,211,102,0.7),
+        0 0 30px rgba(37,211,102,0.4);
+      z-index: 1000;
+      transition: 0.3s ease;
+    }
+
+    .whatsapp-float:hover {
+      transform: scale(1.1);
+    }
+
+    .download-popup {
+      position: fixed;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-30px);
+      background: rgba(2, 6, 23, 0.95);
+      border: 1px solid rgba(0,247,255,0.35);
+      padding: 18px 24px;
+      border-radius: 18px;
+      color: white;
+      z-index: 999999;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 300px;
+      max-width: 90%;
+      box-shadow:
+        0 0 20px rgba(0,247,255,0.35),
+        0 0 40px rgba(34,197,94,0.18),
+        0 10px 40px rgba(0,0,0,0.35);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.5s ease;
+      backdrop-filter: blur(18px);
+    }
+
+    .download-popup.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .download-popup-icon {
+      font-size: 24px;
+      color: #00f7ff;
+      text-shadow: 0 0 10px #00f7ff, 0 0 20px #00f7ff;
+      animation: pulseGlow 1.5s infinite alternate;
+    }
+
+    .download-popup-text {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #e2e8f0;
+    }
+
+    .video-modal, .pdf-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999999;
+      padding: 20px;
+    }
+
+    .video-wrapper, .pdf-wrapper {
+      position: relative;
+      width: 95%;
+      max-width: 900px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(0,247,255,0.25);
+      border-radius: 18px;
+      padding: 15px;
+      box-shadow:
+        0 0 20px rgba(0,247,255,0.18),
+        0 0 40px rgba(34,197,94,0.12);
+    }
+
+    .video-wrapper video {
+      width: 100%;
+      max-height: 75vh;
+      border-radius: 14px;
+      background: black;
+    }
+
+    .pdf-wrapper {
+      height: 90vh;
+    }
+
+    .pdf-wrapper iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      border-radius: 14px;
+      background: white;
+    }
+
+    .close-video-btn, .close-pdf-btn {
+      position: absolute;
+      top: -45px;
+      right: 0;
+      background: #00f7ff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #020617;
+      box-shadow: 0 0 15px rgba(0,247,255,0.5);
+    }
+
+    /* BOTTOM NAV */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(2, 6, 23, 0.95);
+      backdrop-filter: blur(18px);
+      border-top: 1px solid rgba(0,247,255,0.15);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 12px 8px calc(12px + env(safe-area-inset-bottom));
+      z-index: 9999;
+      box-shadow: 0 -10px 30px rgba(0,0,0,0.25);
+    }
+
+    .bottom-nav a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: #94a3b8;
+      transition: 0.3s ease;
+      padding: 8px 10px;
+      border-radius: 14px;
+      min-width: 60px;
+    }
+
+    .bottom-nav a span:first-child {
+      font-size: 20px;
+    }
+
+    .bottom-nav a.active,
+    .bottom-nav a:hover {
+      color: #00f7ff;
+      background: rgba(0,247,255,0.08);
+      box-shadow: 0 0 15px rgba(0,247,255,0.08);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(25px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-25px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulseGlow {
+      from {
+        text-shadow: 0 0 8px #00f7ff, 0 0 16px #00f7ff, 0 0 28px rgba(0,247,255,0.7);
+      }
+      to {
+        text-shadow: 0 0 12px #00f7ff, 0 0 25px #00f7ff, 0 0 45px rgba(34,197,94,0.5);
+      }
+    }
+
+    @keyframes loadingBar {
+      from { width: 0%; }
+      to { width: 100%; }
+    }
+
+    @keyframes floatParticle {
+      from {
+        transform: translateY(100vh) scale(0.6);
+        opacity: 0;
+      }
+      20% { opacity: 1; }
+      to {
+        transform: translateY(-10vh) scale(1.2);
+        opacity: 0;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .nav-links {
+        display: none;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .hero-text h1 {
+        font-size: 2.3rem;
+      }
+
+      .loader-logo {
+        font-size: 34px;
+      }
+
+      .download-popup {
+        top: 20px;
+        min-width: unset;
+        width: 92%;
+        padding: 16px 18px;
+      }
+
+      .close-video-btn, .close-pdf-btn {
+        top: -50px;
+      }
+
+      .faq-question {
+        font-size: 15px;
+      }
+
+      .hero {
+        min-height: auto;
+        padding-top: 10px;
+      }
+
+      .page {
+        padding-top: 10px;
+      }
+
+      .section-title {
+        font-size: 1.9rem;
+      }
+
+      .hero-buttons .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loader">
+    <div class="loader-logo">BP</div>
+    <div class="loader-bar">
+      <div class="loader-fill"></div>
+    </div>
+  </div>
+
+  <div id="downloadPopup" class="download-popup">
+    <div class="download-popup-icon">⬇</div>
+    <div class="download-popup-text">
+      <strong>Download Started</strong><br>
+      Your file is being downloaded. Check your notification section.
+    </div>
+  </div>
+
+  <div class="particles">
+    <div class="particle" style="left:5%; animation-duration: 12s; animation-delay: 0s;"></div>
+    <div class="particle" style="left:12%; animation-duration: 15s; animation-delay: 2s;"></div>
+    <div class="particle" style="left:20%; animation-duration: 10s; animation-delay: 4s;"></div>
+    <div class="particle" style="left:30%; animation-duration: 18s; animation-delay: 1s;"></div>
+    <div class="particle" style="left:42%; animation-duration: 14s; animation-delay: 3s;"></div>
+    <div class="particle" style="left:55%; animation-duration: 16s; animation-delay: 5s;"></div>
+    <div class="particle" style="left:67%; animation-duration: 11s; animation-delay: 2s;"></div>
+    <div class="particle" style="left:78%; animation-duration: 17s; animation-delay: 6s;"></div>
+    <div class="particle" style="left:88%; animation-duration: 13s; animation-delay: 1s;"></div>
+    <div class="particle" style="left:95%; animation-duration: 19s; animation-delay: 4s;"></div>
+  </div>
+
+  <div class="app-shell">
+    <nav>
+      <div class="logo">BP</div>
+      <div class="nav-links">
+        <a href="#" data-page="home" class="active">Home</a>
+        <a href="#" data-page="features">Features</a>
+        <a href="#" data-page="tutorials">Tutorials</a>
+        <a href="#" data-page="help">Help</a>
+        <a href="#" data-page="mentor">Mentors</a>
+        <a href="#" data-page="vip">VIP Rewards</a>
+        <a href="#" data-page="faq">FAQ</a>
+        <a href="#" data-page="access">Access</a>
+      </div>
+    </nav>
+
+    <div class="page-container">
+
+      <!-- HOME -->
+      <div class="page active" id="page-home">
+        <div class="container page-inner">
+          <section class="hero">
+            <div class="hero-text">
+              <div class="typing" id="typingText"></div>
+              <h1>Smart <span>Investment Access</span> in One App</h1>
+              <p>
+                Manage your BP investment account with a smooth mobile experience. Login, register, access your dashboard, watch tutorials, read your guide and connect with support from one place.
+              </p>
+              <div class="hero-buttons">
+                <a href="https://ghanabp.com/xml/index.html#/" class="btn btn-primary">Open Dashboard</a>
+                <a href="https://ghanabp.com/xml/index.html#/" class="btn btn-secondary">Login</a>
+                <a href="https://ghanabp.com/xml/index.html#/" class="btn btn-third">Register</a>
+                <a href="#" onclick="openPDF()" class="btn btn-secondary">Read Guide</a>
+                <a href="#" onclick="downloadGuide()" class="btn btn-third">Download Guide</a>
+              </div>
+            </div>
+
+            <div class="hero-card">
+              <h3>📈 Quick Access</h3>
+
+              <div class="mini-box">
+                <div>
+                  <span>Secure Access</span><br>
+                  <strong>Login System Ready</strong>
+                </div>
+                <div>🔐</div>
+              </div>
+
+              <div class="mini-box">
+                <div>
+                  <span>Investment Dashboard</span><br>
+                  <strong>Track Your Account</strong>
+                </div>
+                <div>📊</div>
+              </div>
+
+              <div class="mini-box">
+                <div>
+                  <span>Company Platform</span><br>
+                  <strong>Fast Mobile Access</strong>
+                </div>
+                <div>🚀</div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- FEATURES -->
+      <div class="page" id="page-features">
+        <div class="container page-inner">
+          <section>
+            <h2 class="section-title">App Features</h2>
+            <p class="section-sub">
+              A cleaner and more professional mobile experience for BP users.
+            </p>
+
+            <div class="grid-3">
+              <div class="card">
+                <h3>🔐 Secure Login</h3>
+                <p>Users can access their existing website account directly from the app.</p>
+              </div>
+
+              <div class="card">
+                <h3>📊 Dashboard Access</h3>
+                <p>Open the company investment platform quickly without browser stress.</p>
+              </div>
+
+              <div class="card">
+                <h3>📱 Mobile Friendly</h3>
+                <p>Designed to feel smoother and cleaner for phone users.</p>
+              </div>
+
+              <div class="card">
+                <h3>📘 Built-In Guide</h3>
+                <p>Read the company guide directly inside the app without leaving the page.</p>
+              </div>
+
+              <div class="card">
+                <h3>🎥 Tutorial Support</h3>
+                <p>Watch helpful videos on withdrawal, top up and invitation steps.</p>
+              </div>
+
+              <div class="card">
+                <h3>💬 Fast Help Center</h3>
+                <p>Contact support and mentors quickly when you need assistance.</p>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- TUTORIALS -->
+      <div class="page" id="page-tutorials">
+        <div class="container page-inner">
+          <section>
+            <h2 class="section-title">Tutorial Center</h2>
+            <p class="section-sub">
+              Watch simple tutorial videos to help you use the BP platform with ease.
+            </p>
+
+            <div class="grid-3">
+              <div class="card">
+                <h3>💸 How to Withdraw</h3>
+                <p>Learn the correct steps to withdraw your money from the BP platform.</p>
+                <br>
+                <a href="#" onclick="openVideo('VID-20260325-WA0259(5).mp4')" class="btn btn-primary">Watch Tutorial</a>
+              </div>
+
+              <div class="card">
+                <h3>➕ How to Top Up</h3>
+                <p>Watch how to fund or top up your account correctly on the platform.</p>
+                <br>
+                <a href="#" onclick="openVideo('VID-20260325-WA0260 (1).mp4')" class="btn btn-secondary">Play Guide</a>
+              </div>
+
+              <div class="card">
+                <h3>👥 How to Invite Subordinates</h3>
+                <p>See how to invite your team members or subordinates using your referral process.</p>
+                <br>
+                <a href="#" onclick="openVideo('VID-20260325-WA0271.mp4')" class="btn btn-third">Watch Now</a>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- HELP -->
+      <div class="page" id="page-help">
+        <div class="container page-inner">
+          <section>
+            <h2 class="section-title">Help Center</h2>
+            <p class="section-sub">
+              Get support, access your company guide, and learn how to use the BP platform better.
+            </p>
+
+            <div class="grid-3">
+              <div class="card">
+                <h3>💬 Customer Support</h3>
+                <p>Need help with your account, top up, withdrawal or registration? Contact support quickly.</p>
+                <br>
+                <a href="https://w5hab5.qbcc-links.com/" class="btn btn-primary" target="_blank">Contact Support</a>
+              </div>
+
+              <div class="card">
+                <h3>📘 Company Guide</h3>
+                <p>Read the BP guide to understand the platform, account rules and investment details.</p>
+                <br>
+                <a href="#" onclick="openPDF()" class="btn btn-secondary">Open Guide</a>
+              </div>
+
+              <div class="card">
+                <h3>🎥 Tutorial Videos</h3>
+                <p>Watch helpful videos that explain withdrawals, top ups and inviting subordinates.</p>
+                <br>
+                <a href="#" onclick="showPage('tutorials')" class="btn btn-third">View Tutorials</a>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- MENTOR -->
+      <div class="page" id="page-mentor">
+        <div class="container page-inner">
+          <section>
+            <h2 class="section-title">Mentor Support Team</h2>
+            <p class="section-sub">
+              Contact your assigned BP mentors for guidance, onboarding assistance, account clarification and support.
+            </p>
+
+            <div class="grid-3">
+              <div class="card">
+                <div class="mentor-name">Qiana</div>
+                <div class="mentor-role">Mentor / Support Guide</div>
+                <p><strong>Phone:</strong> +44 7898 166682</p>
+                <div class="mentor-actions">
+                  <a href="tel:+447898166682" class="btn btn-primary">Call</a>
+                  <a href="https://wa.me/447898166682" class="btn btn-secondary" target="_blank">WhatsApp</a>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="mentor-name">Bess</div>
+                <div class="mentor-role">Mentor / Client Support</div>
+                <p><strong>Phone:</strong> +44 7916 682658</p>
+                <div class="mentor-actions">
+                  <a href="tel:+447916682658" class="btn btn-primary">Call</a>
+                  <a href="https://wa.me/447916682658" class="btn btn-secondary" target="_blank">WhatsApp</a>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="mentor-name">Beas</div>
+                <div class="mentor-role">Mentor / Platform Assistance</div>
+                <p><strong>Phone:</strong> +44 7518 008462</p>
+                <div class="mentor-actions">
+                  <a href="tel:+447518008462" class="btn btn-primary">Call</a>
+                  <a href="https://wa.me/447518008462" class="btn btn-secondary" target="_blank">WhatsApp</a>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- VIP -->
+      <div class="page" id="page-vip">
+        <div class="container page-inner">
+          <section>
+            <h2 class="section-title">BP VIP Invitation Program</h2>
+            <p class="section-sub">
+              🌍 Join the BP VIP Invitation Program and Win Amazing Prizes! 🚗💥
+              <br><br>
+              Due to global tensions, by joining the BP VIP Invitation Program, you can not only upgrade your VIP status but also receive generous rewards! Invite your friends to join and win amazing prizes together, creating surprises for the next three months!
+            </p>
+
+            <div class="grid-3">
+              <div class="card">
+                <h3>🎁 Invite Rewards (1)</h3>
+                <ul>
+                  <li>Invite 10 people to recharge VIP: 500 GHS cash or 500 GHS gas card</li>
+                  <li>Invite 50 people to recharge VIP: 3,000 GHS cash or Beats headphones</li>
+                  <li>Invite 100 people to recharge VIP: 6,000 GHS cash or iPhone 14</li>
+                  <li>Invite 300 people to recharge VIP: 15,000 GHS cash or MacBook Air</li>
+                </ul>
+              </div>
+
+              <div class="card">
+                <h3>🏆 Invite Rewards (2)</h3>
+                <ul>
+                  <li>Invite 500 people to recharge VIP: 20,000 GHS cash or high-end home appliances</li>
+                  <li>Invite 700 people to recharge VIP: 30,000 GHS cash or luxury car rental</li>
+                  <li>Invite 800 people to recharge VIP: 35,000 GHS cash or 7-day London + Paris tour</li>
+                </ul>
+              </div>
+
+              <div class="card">
+                <h3>🚀 Mega Rewards</h3>
+                <ul>
+                  <li>Invite 1000 people to recharge VIP: 50,000 GHS cash or 7-day global luxury travel (Europe tour)</li>
+                  <li>Invite 2000 people to recharge VIP: 70,000 GHS cash or experience a supercar for a week</li>
+                  <li>Invite 3000 people to upgrade to VIP: 100,000 GHS cash or a 5-day vacation at a world-class luxury resort</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="card" style="margin-top: 28px;">
+              <h3>🔥 Special Offer</h3>
+              <p>
+                Three-month reward settlement: After participating in the event, you will receive generous rewards, all of which will be settled within 15 business days after the event ends.
+                <br><br>
+                <strong>⏰ Event Period:</strong> From the start of the event until 3 months later, all rewards will be distributed within 15 business days after the event ends.
+                <br><br>
+                <strong>📲 Reminder:</strong> Invite your friends to join now and win amazing rewards.
+              </p>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- FAQ -->
+      <div class="page" id="page-faq">
+        <div class="container page-inner">
+          <section>
+            <h2 class="section-title">Frequently Asked Questions</h2>
+            <p class="section-sub">
+              Quick answers to common BP platform questions.
+            </p>
+
+            <div class="faq-box">
+              <div class="faq-item">
+                <button class="faq-question">
+                  How do I withdraw my money?
+                  <span>+</span>
+                </button>
+                <div class="faq-answer">
+                  Go to the BP dashboard, open your account wallet or withdrawal section, enter your amount and confirm the request. If you are unsure, watch the withdrawal tutorial video in the Tutorial Center.
+                </div>
+              </div>
+
+              <div class="faq-item">
+                <button class="faq-question">
+                  How do I top up my account?
+                  <span>+</span>
+                </button>
+                <div class="faq-answer">
+                  Open your BP account dashboard, choose the top up or recharge option, follow the payment instructions and complete your deposit. You can also watch the top up tutorial for guidance.
+                </div>
+              </div>
+
+              <div class="faq-item">
+                <button class="faq-question">
+                  How do I invite subordinates?
+                  <span>+</span>
+                </button>
+                <div class="faq-answer">
+                  Use your referral or invitation link inside the BP platform and share it with the people you want to invite. The tutorial video section explains this process step by step.
+                </div>
+              </div>
+
+              <div class="faq-item">
+                <button class="faq-question">
+                  Why is my account pending?
+                  <span>+</span>
+                </button>
+                <div class="faq-answer">
+                  Your account may still be under review, awaiting verification, or waiting for payment confirmation. If it takes too long, use the support section to contact customer service.
+                </div>
+              </div>
+
+              <div class="faq-item">
+                <button class="faq-question">
+                  Where can I read the company rules?
+                  <span>+</span>
+                </button>
+                <div class="faq-answer">
+                  You can open the Company Guide directly from the app using the Read Guide button. It contains information about the BP platform, membership system, rules and guidelines.
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- ACCESS -->
+      <div class="page" id="page-access">
+        <div class="container page-inner">
+          <section>
+            <div class="card" style="text-align:center; padding:60px 30px;">
+              <h2 class="section-title">Open BP Platform</h2>
+              <p class="section-sub" style="margin-bottom:30px;">
+                Continue to login, register or access your investment dashboard.
+              </p>
+              <div class="hero-buttons" style="justify-content:center;">
+                <a href="https://ghanabp.com/xml/index.html#/" class="btn btn-primary">Launch BP</a>
+                <a href="https://ghanabp.com/xml/index.html#/" class="btn btn-secondary">Login</a>
+                <a href="https://ghanabp.com/xml/index.html#/" class="btn btn-third">Register</a>
+              </div>
+            </div>
+          </section>
+
+          <footer>
+            © 2026 BP Investment App — All Rights Reserved
+          </footer>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <a class="whatsapp-float" href="https://w5hab5.qbcc-links.com/" target="_blank">💬</a>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <a href="#" data-page="home" class="active"><span>🏠</span><span>Home</span></a>
+    <a href="#" data-page="tutorials"><span>🎥</span><span>Videos</span></a>
+    <a href="#" data-page="help"><span>🛟</span><span>Help</span></a>
+    <a href="#" data-page="mentor"><span>👨‍🏫</span><span>Mentors</span></a>
+    <a href="#" data-page="vip"><span>🎁</span><span>Rewards</span></a>
+  </div>
+
+  <script>
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        document.getElementById("loader").classList.add("hide");
+      }, 2800);
+    });
+
+    const text = "📈 Secure • Smooth • Investment Access";
+    const typingText = document.getElementById("typingText");
+    let i = 0;
+
+    function typeEffect() {
+      if (typingText && i < text.length) {
+        typingText.innerHTML += text.charAt(i);
+        i++;
+        setTimeout(typeEffect, 70);
+      }
+    }
+    typeEffect();
+
+    function downloadGuide() {
+      const popup = document.getElementById("downloadPopup");
+      popup.classList.add("show");
+
+      setTimeout(() => {
+        window.open("https://www.mediafire.com/file/626pwo144olmf5u/BP_Group_Unlocking_Your_Earning_Potential.pdf/file", "_blank");
+      }, 700);
+
+      setTimeout(() => {
+        popup.classList.remove("show");
+      }, 4000);
+    }
+
+    function openPDF() {
+      document.getElementById("pdfModal").style.display = "flex";
+    }
+
+    function closePDF() {
+      document.getElementById("pdfModal").style.display = "none";
+    }
+
+    function openVideo(videoFile) {
+      const modal = document.getElementById("videoModal");
+      const player = document.getElementById("videoPlayer");
+      player.src = videoFile;
+      modal.style.display = "flex";
+      player.load();
+      player.play().catch(() => {});
+    }
+
+    function closeVideo() {
+      const modal = document.getElementById("videoModal");
+      const player = document.getElementById("videoPlayer");
+      player.pause();
+      player.src = "";
+      modal.style.display = "none";
+    }
+
+    const faqItems = document.querySelectorAll(".faq-item");
+
+    faqItems.forEach(item => {
+      const question = item.querySelector(".faq-question");
+
+      question.addEventListener("click", () => {
+        faqItems.forEach(otherItem => {
+          if (otherItem !== item) {
+            otherItem.classList.remove("active");
+          }
+        });
+
+        item.classList.toggle("active");
+      });
+    });
+
+    let currentPage = "home";
+
+    function showPage(pageName) {
+      if (pageName === currentPage) return;
+
+      const current = document.getElementById(`page-${currentPage}`);
+      const next = document.getElementById(`page-${pageName}`);
+      if (!next) return;
+
+      current.classList.remove("active");
+      current.classList.add("exit-left");
+
+      setTimeout(() => {
+        current.classList.remove("exit-left");
+      }, 600);
+
+      next.classList.add("active");
+      next.scrollTop = 0;
+      currentPage = pageName;
+
+      document.querySelectorAll("[data-page]").forEach(link => {
+        link.classList.toggle("active", link.getAttribute("data-page") === pageName);
+      });
+    }
+
+    document.querySelectorAll("[data-page]").forEach(link => {
+      link.addEventListener("click", function(e) {
+        e.preventDefault();
+        const page = this.getAttribute("data-page");
+        showPage(page);
+      });
+    });
+  </script>
+
+  <!-- VIDEO MODAL -->
+  <div id="videoModal" class="video-modal">
+    <div class="video-wrapper">
+      <button onclick="closeVideo()" class="close-video-btn">✖ Close</button>
+      <video id="videoPlayer" controls playsinline>
+        <source src="" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+    </div>
+  </div>
+
+  <!-- PDF MODAL -->
+  <div id="pdfModal" class="pdf-modal">
+    <div class="pdf-wrapper">
+      <button onclick="closePDF()" class="close-pdf-btn">✖ Close</button>
+      <iframe
+        src="https://drive.google.com/file/d/1DWQ2nKMrARiUOXPz28-_MccVnWEUo-uO/preview">
+      </iframe>
+    </div>
+  </div>
+
+</body>
+</html>
